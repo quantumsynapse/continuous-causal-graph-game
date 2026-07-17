@@ -43,10 +43,10 @@ $$
 -
 \gamma u_B(t)
 -
-\eta S^{\mathsf T}u_B(t),
+\eta S^{\mathsf T}u_B(t).
 $$
 
-com $v\in\mathbb{R}_{\geq 0}^{n}$ representando vulnerabilidades estruturais, $\alpha>0$ o ganho de propagação causal, $\rho>0$ a taxa endógena de recuperação, $\gamma>0$ o ganho direto de mitigação e $\eta>0$ o ganho de amortecimento distribuído.
+O vetor $v\in\mathbb{R}_{\geq 0}^{n}$ representa vulnerabilidades estruturais. O parâmetro $\alpha>0$ define o ganho de propagação causal, $\rho>0$ a taxa endógena de recuperação, $\gamma>0$ o ganho direto de mitigação e $\eta>0$ o ganho de amortecimento distribuído.
 
 A discretização explícita utilizada é
 
@@ -59,10 +59,10 @@ x_k
 +
 \Delta t\,
 f\left(x_k,u_{A,k},u_{B,k}\right)
-\right],
+\right].
 $$
 
-onde $\Pi_{\mathbb{R}_{\geq 0}^{n}}$ representa a projeção no ortante não negativo.
+O operador $\Pi_{\mathbb{R}_{\geq 0}^{n}}$ representa a projeção no ortante não negativo.
 
 ## Jogo diferencial
 
@@ -77,7 +77,7 @@ x^{\mathsf T}Qx
 +
 u_B^{\mathsf T}Ru_B
 +
-\lambda_E u_A^{\mathsf T}u_B
+\lambda_Eu_A^{\mathsf T}u_B
 +
 \lambda_C\Phi(G,x)
 \right)
@@ -86,7 +86,7 @@ u_B^{\mathsf T}Ru_B
 x(T)^{\mathsf T}Q_Tx(T).
 $$
 
-O primeiro termo penaliza o dano acumulado. O segundo restringe a magnitude e o custo das intervenções. O terceiro penaliza o acoplamento direto entre pressão e resposta, utilizado como proxy de escalada. O quarto penaliza concentração causal e exposição estrutural.
+O primeiro termo penaliza o dano acumulado. O segundo restringe a magnitude e o custo das intervenções. O terceiro penaliza o acoplamento direto entre pressão e resposta, utilizado como aproximação da escalada. O quarto penaliza concentração causal e exposição estrutural.
 
 O agente $A$ maximiza o retorno econômico de sua política sob custo próprio:
 
@@ -104,7 +104,7 @@ d_A(u_B)
 \,dt.
 $$
 
-A condição de dissuasão é obtida quando
+A condição de dissuasão é
 
 $$
 \mathbb{E}\left[J_A\mid u_B^{\star}\right]
@@ -112,13 +112,15 @@ $$
 \mathbb{E}\left[J_A\mid u_A=0\right],
 $$
 
-sem que
+sob a restrição
 
 $$
 \left\lVert u_B^{\star}\right\rVert_2
+<
+u_{\mathrm{ret}},
 $$
 
-atinja níveis associados a uma retaliação econômica de grande magnitude.
+onde $u_{\mathrm{ret}}$ representa o limiar associado a uma resposta econômica de grande magnitude.
 
 ## Política de intervenção causal mínima
 
@@ -162,7 +164,7 @@ u_{B,i}^{\star}
 \right).
 $$
 
-A regra aproxima uma política de controle preditivo esparso com penalização de energia e escalada. O mecanismo atua sobre cortes causais de alta centralidade estratégica e busca reduzir o retorno marginal da política de $A$ com o menor suporte de intervenção possível.
+A regra aproxima uma política de controle preditivo esparso com penalização de energia e escalada. O mecanismo atua sobre vértices de elevada centralidade estratégica e busca reduzir o retorno marginal da política de $A$ com o menor suporte de intervenção possível.
 
 ## Métricas
 
@@ -226,17 +228,17 @@ O índice $I_D$ é adimensional. Valores maiores indicam menor dano terminal e m
 
 ## Resultado da configuração de referência
 
-Para uma simulação com $T=40$, passo temporal $\Delta t=0{,}01$ e $4\,000$ iterações, foram obtidos:
+Para uma simulação com $T=40$, passo temporal $\Delta t=0.01$ e $4000$ iterações, foram obtidos:
 
 | Métrica | Resultado |
-|---|---:|
-| $D_T$ | $27{,}101402$ |
-| $U_T$ | $11{,}614500$ |
-| $E_T$ | $8{,}449700$ |
-| $D_f$ | $0{,}205755$ |
-| $I_D$ | $0{,}454799$ |
+|:---|---:|
+| $D_T$ | $27.101402$ |
+| $U_T$ | $11.614500$ |
+| $E_T$ | $8.449700$ |
+| $D_f$ | $0.205755$ |
+| $I_D$ | $0.454799$ |
 
-A configuração de referência manteve todos os estados econômicos terminais abaixo de aproximadamente $0{,}21$.
+A configuração de referência manteve todos os estados econômicos terminais abaixo de aproximadamente $0.21$.
 
 O resultado caracteriza estabilização dinâmica com intervenção seletiva e limitada. Não constitui, isoladamente, prova de equilíbrio de Nash ou demonstração formal de dissuasão ótima.
 
@@ -257,3 +259,70 @@ O resultado caracteriza estabilização dinâmica com intervenção seletiva e l
     ├── graph.c
     ├── io.c
     └── main.c
+```
+
+## Compilação
+
+O sistema requer Linux, GCC e a biblioteca matemática padrão.
+
+```bash
+make clean
+make
+```
+
+A compilação utiliza C90:
+
+```text
+gcc -std=c89 -pedantic -Wall -Wextra -O2
+```
+
+## Execução
+
+```bash
+./causal_game data/graph.txt data/config.txt > trajectory.csv 2> metrics.txt
+```
+
+A trajetória temporal é gravada em `trajectory.csv`. As métricas agregadas são gravadas em `metrics.txt`.
+
+## Verificação
+
+```bash
+cat metrics.txt
+head trajectory.csv
+tail trajectory.csv
+```
+
+## Limpeza
+
+```bash
+make clean
+rm -f trajectory.csv metrics.txt
+```
+
+## Complexidade computacional
+
+Para um grafo representado por matriz densa, a atualização da dinâmica possui complexidade
+
+$$
+\mathcal{O}(n^2)
+$$
+
+por passo temporal.
+
+A ordenação dos escores estratégicos possui complexidade
+
+$$
+\mathcal{O}(n\log n).
+$$
+
+Para $K=T/\Delta t$ passos, a complexidade total é
+
+$$
+\mathcal{O}\left(Kn^2\right),
+$$
+
+com memória
+
+$$
+\mathcal{O}(n^2).
+$$
