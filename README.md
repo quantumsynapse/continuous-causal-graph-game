@@ -35,15 +35,15 @@ A dinâmica nominal é
 ```math
 \dot{x}(t)
 =
-\alpha W^{\mathsf T}x(t)
+\alpha W^{\top}x(t)
 +
-\operatorname{diag}(1+v)u_A(t)
+\mathrm{diag}(1+v)u_A(t)
 -
 \rho x(t)
 -
 \gamma u_B(t)
 -
-\eta S^{\mathsf T}u_B(t).
+\eta S^{\top}u_B(t).
 ```
 
 O vetor $v\in\mathbb{R}_{\geq 0}^{n}$ representa vulnerabilidades estruturais. O parâmetro $\alpha>0$ define o ganho de propagação causal, $\rho>0$ a taxa endógena de recuperação, $\gamma>0$ o ganho direto de mitigação e $\eta>0$ o ganho de amortecimento distribuído.
@@ -54,12 +54,12 @@ A discretização explícita utilizada é
 x_{k+1}
 =
 \Pi_{\mathbb{R}_{\geq 0}^{n}}
-\left[
+[
 x_k
 +
 \Delta t\,
-f\left(x_k,u_{A,k},u_{B,k}\right)
-\right].
+f(x_k,u_{A,k},u_{B,k})
+)].
 ```
 
 O operador $\Pi_{\mathbb{R}_{\geq 0}^{n}}$ representa a projeção no ortante não negativo.
@@ -72,18 +72,18 @@ O funcional de custo do agente $B$ é
 J_B
 =
 \int_0^T
-\left(
-x^{\mathsf T}Qx
+(
+x^{\top}Qx
 +
-u_B^{\mathsf T}Ru_B
+u_B^{\top}Ru_B
 +
-\lambda_Eu_A^{\mathsf T}u_B
+\lambda_Eu_A^{\top}u_B
 +
 \lambda_C\Phi(G,x)
-\right)
+)
 \,dt
 +
-x(T)^{\mathsf T}Q_Tx(T).
+x(T)^{\top}Q_Tx(T).
 ```
 
 O primeiro termo penaliza o dano acumulado. O segundo restringe a magnitude e o custo das intervenções. O terceiro penaliza o acoplamento direto entre pressão e resposta, utilizado como aproximação da escalada. O quarto penaliza concentração causal e exposição estrutural.
@@ -94,28 +94,28 @@ O agente $A$ maximiza o retorno econômico de sua política sob custo próprio:
 J_A
 =
 \int_0^T
-\left(
+(
 r_A(x,u_A)
 -
 c_A(u_A)
 -
 d_A(u_B)
-\right)
+)
 \,dt.
 ```
 
 A condição de dissuasão é
 
 ```math
-\mathbb{E}\left[J_A\mid u_B^{\star}\right]
+\mathbb{E}[J_A\mid u_B^{\star})]
 \leq
-\mathbb{E}\left[J_A\mid u_A=0\right],
+\mathbb{E}[J_A\mid u_A=0)],
 ```
 
 sob a restrição
 
 ```math
-\left\lVert u_B^{\star}\right\rVert_2
+\left\lVert u_B^{\star})\rVert_2
 <
 u_{\mathrm{ret}},
 ```
@@ -130,17 +130,17 @@ A implementação utiliza uma aproximação esparsa para a política do agente $
 \sigma_i
 =
 u_{A,i}(1+x_i)
-\left[
+[
 1
 +
 \sum_j
-\left|W_{ij}\right|
-\left(1+S_{ij}\right)
+|W_{ij})|
+(1+S_{ij})
 +
 \frac{1}{2}
 \sum_j
-\left|W_{ji}\right|
-\right].
+|W_{ji})|
+)].
 ```
 
 A intervenção é aplicada somente aos vértices com maior valor de $\sigma_i$, limitando o suporte de $u_B$ a aproximadamente $\sqrt{n}$ componentes.
@@ -150,8 +150,8 @@ Para cada componente selecionado,
 ```math
 u_{B,i}^{\star}
 =
-\operatorname{sat}_{[0,u_{\max}]}
-\left(
+\mathrm{sat}_{[0,u_{\max}]}
+(
 \frac{
 \beta\sigma_i
 }{
@@ -161,7 +161,7 @@ u_{B,i}^{\star}
 +
 \varepsilon
 }
-\right).
+).
 ```
 
 A regra aproxima uma política de controle preditivo esparso com penalização de energia e escalada. O mecanismo atua sobre vértices de elevada centralidade estratégica e busca reduzir o retorno marginal da política de $A$ com o menor suporte de intervenção possível.
@@ -176,7 +176,7 @@ Dano acumulado:
 D_T
 =
 \int_0^T
-\left\lVert x(t)\right\rVert_2^2
+\left\lVert x(t))\rVert_2^2
 \,dt.
 ```
 
@@ -186,7 +186,7 @@ Esforço acumulado de controle:
 U_T
 =
 \int_0^T
-\left\lVert u_B(t)\right\rVert_2^2
+\left\lVert u_B(t))\rVert_2^2
 \,dt.
 ```
 
@@ -196,7 +196,7 @@ Acoplamento entre pressão e resposta:
 E_T
 =
 \int_0^T
-u_A(t)^{\mathsf T}u_B(t)
+u_A(t)^{\top}u_B(t)
 \,dt.
 ```
 
@@ -205,7 +205,7 @@ Dano terminal:
 ```math
 D_f
 =
-\left\lVert x(T)\right\rVert_2^2.
+\left\lVert x(T))\rVert_2^2.
 ```
 
 Índice de dissuasão residual:
@@ -220,7 +220,7 @@ I_D
 +
 D_f
 +
-\mathbf{1}^{\mathsf T}u_A(T)
+\mathbf{1}^{\top}u_A(T)
 }.
 ```
 
@@ -318,7 +318,7 @@ A ordenação dos escores estratégicos possui complexidade
 Para $K=T/\Delta t$ passos, a complexidade total é
 
 ```math
-\mathcal{O}\left(Kn^2\right),
+\mathcal{O}(Kn^2),
 ```
 
 com memória
