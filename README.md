@@ -1,248 +1,211 @@
+Library
+/
+README.md
+
+
 # Teoria dos Jogos Causais em Grafos Contínuos para Dissuasão Econômica Mínima
 
-## Formulação
+Modelo computacional de jogo diferencial em grafo causal contínuo para analisar pressão econômica, propagação sistêmica de dano e intervenções seletivas de baixo custo.
 
-Considere um grafo causal dirigido e ponderado
+A implementação é determinística, escrita em C90 e utiliza apenas GCC, GNU Make e a biblioteca matemática padrão.
 
-```math
-G(t)=\bigl(V,E,W(t),S(t)\bigr),
+## Objetivo
+
+O sistema representa dependências econômicas como um grafo dirigido e ponderado. Dois agentes interagem sobre esse grafo:
+
+- **Agente A** aplica uma política de pressão econômica.
+- **Agente B** seleciona intervenções para reduzir dano, propagação e exposição sistêmica.
+
+O objetivo é calcular uma política de intervenção limitada que estabilize a dinâmica, concentre recursos nos vértices mais relevantes e reduza o retorno marginal da política de pressão.
+
+## Principais características
+
+- Grafo causal dirigido e ponderado.
+- Dinâmica contínua com discretização explícita.
+- Jogo diferencial entre pressão e mitigação.
+- Política de intervenção esparsa.
+- Priorização por vulnerabilidade, estado e conectividade causal.
+- Implementação determinística em C90.
+- Entrada configurável por arquivos de texto.
+- Trajetória e métricas gravadas separadamente.
+- Complexidade dominante O(K n²) para matriz densa.
+
+## Modelo causal
+
+O sistema utiliza o grafo:
+
+```text
+G(t) = (V, E, W(t), S(t))
 ```
 
-com $|V|=n$, matriz de acoplamento causal $W(t)\in\mathbb{R}^{n\times n}$ e matriz de sensibilidade estratégica $S(t)\in\mathbb{R}^{n\times n}$.
+onde:
 
-O estado econômico agregado do agente $B$ é representado por
+- `V` é o conjunto de vértices econômicos;
+- `E` é o conjunto de relações causais;
+- `W(t)` é a matriz de acoplamento causal;
+- `S(t)` é a matriz de sensibilidade estratégica;
+- `n = |V|` é o número de vértices.
 
-```math
-x(t)\in\mathbb{R}_{\geq 0}^{n},
+O estado econômico agregado do agente B é:
+
+```text
+x(t) ∈ Rⁿ, com x(t) ≥ 0
 ```
 
-onde cada componente codifica dano, perda de capacidade, degradação logística, fragilidade financeira, dependência tecnológica ou vulnerabilidade sistêmica associada a um vértice do grafo.
+Cada componente pode representar dano, perda de capacidade, degradação logística, fragilidade financeira, dependência tecnológica ou vulnerabilidade sistêmica.
 
-O agente $A$ aplica uma política de pressão
+As políticas dos agentes são:
 
-```math
-u_A(t)\in\mathbb{R}_{\geq 0}^{n},
+```text
+u_A(t) ∈ Rⁿ, com u_A(t) ≥ 0
+u_B(t) ∈ Rⁿ, com u_B(t) ≥ 0
 ```
 
-enquanto o agente $B$ seleciona uma política de intervenção
+## Dinâmica do sistema
 
-```math
-u_B(t)\in\mathbb{R}_{\geq 0}^{n}.
+A dinâmica nominal é:
+
+```text
+x_dot(t) = α Wᵀ x(t)
+           + diag(1 + v) u_A(t)
+           - ρ x(t)
+           - γ u_B(t)
+           - η Sᵀ u_B(t)
 ```
 
-A dinâmica nominal é
+Parâmetros:
 
-```math
-\dot{x}(t)
-=
-\alpha W^{\top}x(t)
-+
-\mathrm{diag}(1+v)u_A(t)
--
-\rho x(t)
--
-\gamma u_B(t)
--
-\eta S^{\top}u_B(t).
+- `v`: vulnerabilidades estruturais;
+- `α`: ganho de propagação causal;
+- `ρ`: taxa endógena de recuperação;
+- `γ`: ganho direto de mitigação;
+- `η`: ganho de amortecimento distribuído.
+
+A atualização numérica é:
+
+```text
+x_(k+1) = projection_nonnegative(
+            x_k + Δt f(x_k, u_A,k, u_B,k)
+          )
 ```
 
-O vetor $v\in\mathbb{R}_{\geq 0}^{n}$ representa vulnerabilidades estruturais. O parâmetro $\alpha>0$ define o ganho de propagação causal, $\rho>0$ a taxa endógena de recuperação, $\gamma>0$ o ganho direto de mitigação e $\eta>0$ o ganho de amortecimento distribuído.
-
-A discretização explícita utilizada é
-
-```math
-x_{k+1}
-=
-\Pi_{\mathbb{R}_{\geq 0}^{n}}
-[
-x_k
-+
-\Delta t\,
-f(x_k,u_{A,k},u_{B,k})
-)].
-```
-
-O operador $\Pi_{\mathbb{R}_{\geq 0}^{n}}$ representa a projeção no ortante não negativo.
+A projeção mantém todos os estados no domínio não negativo.
 
 ## Jogo diferencial
 
-O funcional de custo do agente $B$ é
+O custo do agente B é:
 
-```math
-J_B
-=
-\int_0^T
-(
-x^{\top}Qx
-+
-u_B^{\top}Ru_B
-+
-\lambda_Eu_A^{\top}u_B
-+
-\lambda_C\Phi(G,x)
-)
-\,dt
-+
-x(T)^{\top}Q_Tx(T).
+```text
+J_B = integral de 0 a T de
+      [xᵀQx + u_BᵀRu_B + λ_E u_Aᵀu_B + λ_C Φ(G,x)] dt
+      + x(T)ᵀ Q_T x(T)
 ```
 
-O primeiro termo penaliza o dano acumulado. O segundo restringe a magnitude e o custo das intervenções. O terceiro penaliza o acoplamento direto entre pressão e resposta, utilizado como aproximação da escalada. O quarto penaliza concentração causal e exposição estrutural.
+Esse funcional combina:
 
-O agente $A$ maximiza o retorno econômico de sua política sob custo próprio:
+- dano acumulado;
+- custo das intervenções;
+- penalização de escalada;
+- concentração causal e exposição estrutural;
+- dano terminal.
 
-```math
-J_A
-=
-\int_0^T
-(
-r_A(x,u_A)
--
-c_A(u_A)
--
-d_A(u_B)
-)
-\,dt.
+O retorno do agente A é:
+
+```text
+J_A = integral de 0 a T de
+      [r_A(x,u_A) - c_A(u_A) - d_A(u_B)] dt
 ```
 
-A condição de dissuasão é
+A condição operacional de dissuasão é:
 
-```math
-\mathbb{E}[J_A\mid u_B^{\star})]
-\leq
-\mathbb{E}[J_A\mid u_A=0)],
+```text
+E[J_A | u_B*] ≤ E[J_A | u_A = 0]
 ```
 
-sob a restrição
+sujeita à restrição:
 
-```math
-\left\lVert u_B^{\star})\rVert_2
-<
-u_{\mathrm{ret}},
+```text
+||u_B*||₂ < u_ret
 ```
-
-onde $u_{\mathrm{ret}}$ representa o limiar associado a uma resposta econômica de grande magnitude.
 
 ## Política de intervenção causal mínima
 
-A implementação utiliza uma aproximação esparsa para a política do agente $B$. Para cada vértice $i$, define-se o escore
+Para cada vértice `i`, calcula-se o escore estratégico:
 
-```math
-\sigma_i
-=
-u_{A,i}(1+x_i)
-[
-1
-+
-\sum_j
-|W_{ij})|
-(1+S_{ij})
-+
-\frac{1}{2}
-\sum_j
-|W_{ji})|
-)].
+```text
+σ_i = u_A,i (1 + x_i)
+      [1
+       + Σ_j |W_ij| (1 + S_ij)
+       + 0.5 Σ_j |W_ji|]
 ```
 
-A intervenção é aplicada somente aos vértices com maior valor de $\sigma_i$, limitando o suporte de $u_B$ a aproximadamente $\sqrt{n}$ componentes.
+A política atua somente nos vértices com maior escore, limitando o suporte de `u_B` a aproximadamente `sqrt(n)` componentes.
 
-Para cada componente selecionado,
+Para cada componente selecionado:
 
-```math
-u_{B,i}^{\star}
-=
-\mathrm{sat}_{[0,u_{\max}]}
-(
-\frac{
-\beta\sigma_i
-}{
-\lambda_U
-+
-\lambda_Eu_{A,i}
-+
-\varepsilon
-}
-).
+```text
+u_B,i* = sat_[0,u_max](
+           β σ_i / (λ_U + λ_E u_A,i + ε)
+         )
 ```
 
-A regra aproxima uma política de controle preditivo esparso com penalização de energia e escalada. O mecanismo atua sobre vértices de elevada centralidade estratégica e busca reduzir o retorno marginal da política de $A$ com o menor suporte de intervenção possível.
+A regra aproxima um controle preditivo esparso com penalização de energia e escalada.
 
 ## Métricas
 
-A saída padrão contém a trajetória temporal dos estados. A saída de erro contém as métricas agregadas.
-
 Dano acumulado:
 
-```math
-D_T
-=
-\int_0^T
-\left\lVert x(t))\rVert_2^2
-\,dt.
+```text
+D_T = integral de 0 a T de ||x(t)||₂² dt
 ```
 
 Esforço acumulado de controle:
 
-```math
-U_T
-=
-\int_0^T
-\left\lVert u_B(t))\rVert_2^2
-\,dt.
+```text
+U_T = integral de 0 a T de ||u_B(t)||₂² dt
 ```
 
 Acoplamento entre pressão e resposta:
 
-```math
-E_T
-=
-\int_0^T
-u_A(t)^{\top}u_B(t)
-\,dt.
+```text
+E_T = integral de 0 a T de u_A(t)ᵀ u_B(t) dt
 ```
 
 Dano terminal:
 
-```math
-D_f
-=
-\left\lVert x(T))\rVert_2^2.
+```text
+D_f = ||x(T)||₂²
 ```
 
 Índice de dissuasão residual:
 
-```math
-I_D
-=
-\frac{
-1
-}{
-1
-+
-D_f
-+
-\mathbf{1}^{\top}u_A(T)
-}.
+```text
+I_D = 1 / [1 + D_f + 1ᵀu_A(T)]
 ```
 
-O índice $I_D$ é adimensional. Valores maiores indicam menor dano terminal e menor pressão econômica remanescente.
+Valores maiores de `I_D` indicam menor dano terminal e menor pressão econômica remanescente.
 
-## Resultado da configuração de referência
+## Resultado de referência
 
-Para uma simulação com $T=40$, passo temporal $\Delta t=0.01$ e $4000$ iterações, foram obtidos:
+Configuração utilizada:
+
+- horizonte temporal `T = 40`;
+- passo temporal `Δt = 0.01`;
+- `4000` iterações.
 
 | Métrica | Resultado |
 |:---|---:|
-| $D_T$ | $27.101402$ |
-| $U_T$ | $11.614500$ |
-| $E_T$ | $8.449700$ |
-| $D_f$ | $0.205755$ |
-| $I_D$ | $0.454799$ |
+| `D_T` | `27.101402` |
+| `U_T` | `11.614500` |
+| `E_T` | `8.449700` |
+| `D_f` | `0.205755` |
+| `I_D` | `0.454799` |
 
-A configuração de referência manteve todos os estados econômicos terminais abaixo de aproximadamente $0.21$.
+Todos os estados econômicos terminais permaneceram abaixo de aproximadamente `0.21`.
 
-O resultado caracteriza estabilização dinâmica com intervenção seletiva e limitada. Não constitui, isoladamente, prova de equilíbrio de Nash ou demonstração formal de dissuasão ótima.
+O resultado caracteriza estabilização dinâmica com intervenção seletiva e limitada. Ele não constitui, isoladamente, prova de equilíbrio de Nash nem demonstração formal de dissuasão ótima.
 
-## Estrutura do sistema
+## Estrutura do projeto
 
 ```text
 .
@@ -261,16 +224,21 @@ O resultado caracteriza estabilização dinâmica com intervenção seletiva e l
     └── main.c
 ```
 
-## Compilação
+## Requisitos
 
-O sistema requer Linux, GCC e a biblioteca matemática padrão.
+- Linux
+- GCC
+- GNU Make
+- biblioteca matemática padrão
+
+## Compilação
 
 ```bash
 make clean
 make
 ```
 
-A compilação utiliza C90:
+A compilação utiliza:
 
 ```text
 gcc -std=c89 -pedantic -Wall -Wextra -O2
@@ -279,10 +247,15 @@ gcc -std=c89 -pedantic -Wall -Wextra -O2
 ## Execução
 
 ```bash
-./causal_game data/graph.txt data/config.txt > trajectory.csv 2> metrics.txt
+./causal_game data/graph.txt data/config.txt \
+  > trajectory.csv \
+  2> metrics.txt
 ```
 
-A trajetória temporal é gravada em `trajectory.csv`. As métricas agregadas são gravadas em `metrics.txt`.
+Arquivos gerados:
+
+- `trajectory.csv`: trajetória temporal dos estados;
+- `metrics.txt`: métricas agregadas da simulação.
 
 ## Verificação
 
@@ -301,28 +274,26 @@ rm -f trajectory.csv metrics.txt
 
 ## Complexidade computacional
 
-Para um grafo representado por matriz densa, a atualização da dinâmica possui complexidade
+Para uma representação densa do grafo:
 
-```math
-\mathcal{O}(n^2)
-```
+- atualização dinâmica por passo: `O(n²)`;
+- ordenação dos escores: `O(n log n)`;
+- simulação completa com `K = T / Δt` passos: `O(K n²)`;
+- memória: `O(n²)`.
 
-por passo temporal.
+A atualização matricial domina o custo total.
 
-A ordenação dos escores estratégicos possui complexidade
+## Escopo e limitações
 
-```math
-\mathcal{O}(n\log n).
-```
+Este repositório implementa um modelo experimental para análise computacional de estabilidade, propagação causal e intervenção seletiva em sistemas econômicos conectados.
 
-Para $K=T/\Delta t$ passos, a complexidade total é
+O modelo é adequado para:
 
-```math
-\mathcal{O}(Kn^2),
-```
+- experimentos com grafos causais sintéticos;
+- avaliação de políticas esparsas;
+- análise de sensibilidade;
+- comparação entre estratégias de pressão e mitigação;
+- estudo de estabilidade sob diferentes topologias e parâmetros.
 
-com memória
+As saídas devem ser interpretadas como resultados de simulação, não como previsão econômica automática nem recomendação operacional.
 
-```math
-\mathcal{O}(n^2).
-```
