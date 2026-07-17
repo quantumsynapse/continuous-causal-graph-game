@@ -1,0 +1,13 @@
+dt 0.01
+horizon 40.0
+alpha 0.35
+beta 0.70
+gamma 0.85
+lambda_u 1.20
+lambda_e 0.90
+lambda_c 0.40
+pressure_gain 0.55
+recovery_gain 0.65
+control_limit 0.80
+sparsity_threshold 0.05
+max_iterations 64
