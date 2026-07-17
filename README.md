@@ -4,34 +4,37 @@
 
 Considere um grafo causal dirigido e ponderado
 
-\[
-G(t) = \bigl(V,E,W(t),S(t)\bigr),
-\]
+$$
+G(t)=\bigl(V,E,W(t),S(t)\bigr),
+$$
 
-com \(|V|=n\), matriz de acoplamento causal \(W(t)\in\mathbb{R}^{n\times n}\) e matriz de sensibilidade estratégica \(S(t)\in\mathbb{R}^{n\times n}\). O estado econômico agregado do agente \(B\) é representado por
+com $|V|=n$, matriz de acoplamento causal $W(t)\in\mathbb{R}^{n\times n}$ e matriz de sensibilidade estratégica $S(t)\in\mathbb{R}^{n\times n}$.
 
-\[
-x(t)\in\mathbb{R}_{\ge 0}^{n},
-\]
+O estado econômico agregado do agente $B$ é representado por
+
+$$
+x(t)\in\mathbb{R}_{\geq 0}^{n},
+$$
 
 onde cada componente codifica dano, perda de capacidade, degradação logística, fragilidade financeira, dependência tecnológica ou vulnerabilidade sistêmica associada a um vértice do grafo.
 
-O agente \(A\) aplica uma política de pressão
+O agente $A$ aplica uma política de pressão
 
-\[
-u_A(t)\in\mathbb{R}_{\ge 0}^{n},
-\]
+$$
+u_A(t)\in\mathbb{R}_{\geq 0}^{n},
+$$
 
-e o agente \(B\) seleciona uma política de intervenção
+enquanto o agente $B$ seleciona uma política de intervenção
 
-\[
-u_B(t)\in\mathbb{R}_{\ge 0}^{n}.
-\]
+$$
+u_B(t)\in\mathbb{R}_{\geq 0}^{n}.
+$$
 
 A dinâmica nominal é
 
-\[
-\dot{x}(t)=
+$$
+\dot{x}(t)
+=
 \alpha W^{\mathsf T}x(t)
 +
 \operatorname{diag}(1+v)u_A(t)
@@ -41,203 +44,216 @@ A dinâmica nominal é
 \gamma u_B(t)
 -
 \eta S^{\mathsf T}u_B(t),
-\]
+$$
 
-com \(v\in\mathbb{R}_{\ge0}^{n}\) representando vulnerabilidades estruturais, \(\alpha>0\) o ganho de propagação causal, \(\rho>0\) a taxa endógena de recuperação, \(\gamma>0\) o ganho direto de mitigação e \(\eta>0\) o ganho de amortecimento distribuído.
+com $v\in\mathbb{R}_{\geq 0}^{n}$ representando vulnerabilidades estruturais, $\alpha>0$ o ganho de propagação causal, $\rho>0$ a taxa endógena de recuperação, $\gamma>0$ o ganho direto de mitigação e $\eta>0$ o ganho de amortecimento distribuído.
 
 A discretização explícita utilizada é
 
-\[
+$$
 x_{k+1}
 =
-\Pi_{\mathbb{R}_{\ge0}^{n}}
+\Pi_{\mathbb{R}_{\geq 0}^{n}}
 \left[
- x_k+\Delta t\,f(x_k,u_{A,k},u_{B,k})
+x_k
++
+\Delta t\,
+f\left(x_k,u_{A,k},u_{B,k}\right)
 \right],
-\]
+$$
 
-onde \(\Pi\) é a projeção no ortante não negativo.
+onde $\Pi_{\mathbb{R}_{\geq 0}^{n}}$ representa a projeção no ortante não negativo.
 
 ## Jogo diferencial
 
-O funcional do agente \(B\) é
+O funcional de custo do agente $B$ é
 
-\[
+$$
 J_B
 =
 \int_0^T
 \left(
- x^{\mathsf T}Qx
+x^{\mathsf T}Qx
 +
- u_B^{\mathsf T}Ru_B
+u_B^{\mathsf T}Ru_B
 +
- \lambda_E u_A^{\mathsf T}u_B
+\lambda_E u_A^{\mathsf T}u_B
 +
- \lambda_C\Phi(G,x)
-\right)dt
+\lambda_C\Phi(G,x)
+\right)
+\,dt
 +
 x(T)^{\mathsf T}Q_Tx(T).
-\]
+$$
 
-O primeiro termo penaliza dano acumulado. O segundo restringe magnitude e custo das intervenções. O terceiro penaliza acoplamento direto entre pressão e resposta, tratado como proxy de escalada. O quarto penaliza concentração causal e exposição estrutural.
+O primeiro termo penaliza o dano acumulado. O segundo restringe a magnitude e o custo das intervenções. O terceiro penaliza o acoplamento direto entre pressão e resposta, utilizado como proxy de escalada. O quarto penaliza concentração causal e exposição estrutural.
 
-O agente \(A\) maximiza o retorno econômico de sua política sob custo próprio:
+O agente $A$ maximiza o retorno econômico de sua política sob custo próprio:
 
-\[
+$$
 J_A
 =
 \int_0^T
 \left(
- r_A(x,u_A)
+r_A(x,u_A)
 -
- c_A(u_A)
+c_A(u_A)
 -
- d_A(u_B)
-\right)dt.
-\]
+d_A(u_B)
+\right)
+\,dt.
+$$
 
 A condição de dissuasão é obtida quando
 
-\[
-\mathbb{E}[J_A\mid u_B^{\star}]
-\le
-\mathbb{E}[J_A\mid u_A=0],
-\]
+$$
+\mathbb{E}\left[J_A\mid u_B^{\star}\right]
+\leq
+\mathbb{E}\left[J_A\mid u_A=0\right],
+$$
 
 sem que
 
-\[
-\lVert u_B^{\star}\rVert_2
-\]
+$$
+\left\lVert u_B^{\star}\right\rVert_2
+$$
 
-atinja níveis associados a retaliação econômica de grande magnitude.
+atinja níveis associados a uma retaliação econômica de grande magnitude.
 
 ## Política de intervenção causal mínima
 
-A implementação utiliza uma aproximação esparsa para a política de \(B\). Para cada vértice \(i\), define-se o escore
+A implementação utiliza uma aproximação esparsa para a política do agente $B$. Para cada vértice $i$, define-se o escore
 
-\[
+$$
 \sigma_i
 =
- u_{A,i}
-(1+x_i)
+u_{A,i}(1+x_i)
 \left[
 1
 +
-\sum_j |W_{ij}|(1+S_{ij})
+\sum_j
+\left|W_{ij}\right|
+\left(1+S_{ij}\right)
 +
-\frac{1}{2}\sum_j |W_{ji}|
+\frac{1}{2}
+\sum_j
+\left|W_{ji}\right|
 \right].
-\]
+$$
 
-A intervenção é aplicada somente aos vértices com maior \(\sigma_i\), limitando o suporte de \(u_B\) a aproximadamente \(\sqrt{n}\) componentes. Para cada componente selecionado,
+A intervenção é aplicada somente aos vértices com maior valor de $\sigma_i$, limitando o suporte de $u_B$ a aproximadamente $\sqrt{n}$ componentes.
 
-\[
+Para cada componente selecionado,
+
+$$
 u_{B,i}^{\star}
 =
 \operatorname{sat}_{[0,u_{\max}]}
 \left(
-\frac{\beta\sigma_i}
-{\lambda_U+\lambda_Eu_{A,i}+\varepsilon}
+\frac{
+\beta\sigma_i
+}{
+\lambda_U
++
+\lambda_Eu_{A,i}
++
+\varepsilon
+}
 \right).
-\]
+$$
 
-A regra aproxima uma política de controle preditivo esparso com penalização de energia e escalada. O mecanismo atua sobre cortes causais de alta centralidade estratégica e busca reduzir o retorno marginal da política de \(A\) com o menor suporte de intervenção possível.
+A regra aproxima uma política de controle preditivo esparso com penalização de energia e escalada. O mecanismo atua sobre cortes causais de alta centralidade estratégica e busca reduzir o retorno marginal da política de $A$ com o menor suporte de intervenção possível.
 
 ## Métricas
 
-A saída padrão contém a trajetória temporal dos estados. A saída de erro contém
+A saída padrão contém a trajetória temporal dos estados. A saída de erro contém as métricas agregadas.
 
-\[
-D_T=\int_0^T\lVert x(t)\rVert_2^2dt,
-\]
+Dano acumulado:
 
-\[
-U_T=\int_0^T\lVert u_B(t)\rVert_2^2dt,
-\]
+$$
+D_T
+=
+\int_0^T
+\left\lVert x(t)\right\rVert_2^2
+\,dt.
+$$
 
-\[
-E_T=\int_0^Tu_A(t)^{\mathsf T}u_B(t)dt,
-\]
+Esforço acumulado de controle:
 
-\[
-D_f=\lVert x(T)\rVert_2^2,
-\]
+$$
+U_T
+=
+\int_0^T
+\left\lVert u_B(t)\right\rVert_2^2
+\,dt.
+$$
 
-\[
-I_D=
-\frac{1}
-{1+D_f+\mathbf{1}^{\mathsf T}u_A(T)}.
-\]
+Acoplamento entre pressão e resposta:
 
-\(I_D\) é um índice adimensional de dissuasão residual. Valores maiores indicam menor dano terminal e menor pressão remanescente.
+$$
+E_T
+=
+\int_0^T
+u_A(t)^{\mathsf T}u_B(t)
+\,dt.
+$$
 
-## Estrutura dos dados
+Dano terminal:
 
-O arquivo de grafo possui o formato
+$$
+D_f
+=
+\left\lVert x(T)\right\rVert_2^2.
+$$
+
+Índice de dissuasão residual:
+
+$$
+I_D
+=
+\frac{
+1
+}{
+1
++
+D_f
++
+\mathbf{1}^{\mathsf T}u_A(T)
+}.
+$$
+
+O índice $I_D$ é adimensional. Valores maiores indicam menor dano terminal e menor pressão econômica remanescente.
+
+## Resultado da configuração de referência
+
+Para uma simulação com $T=40$, passo temporal $\Delta t=0{,}01$ e $4\,000$ iterações, foram obtidos:
+
+| Métrica | Resultado |
+|---|---:|
+| $D_T$ | $27{,}101402$ |
+| $U_T$ | $11{,}614500$ |
+| $E_T$ | $8{,}449700$ |
+| $D_f$ | $0{,}205755$ |
+| $I_D$ | $0{,}454799$ |
+
+A configuração de referência manteve todos os estados econômicos terminais abaixo de aproximadamente $0{,}21$.
+
+O resultado caracteriza estabilização dinâmica com intervenção seletiva e limitada. Não constitui, isoladamente, prova de equilíbrio de Nash ou demonstração formal de dissuasão ótima.
+
+## Estrutura do sistema
 
 ```text
-n_nodes n_edges
-from to weight sensitivity
-...
-```
-
-O arquivo de parâmetros possui pares chave-valor
-
-```text
-dt value
-horizon value
-alpha value
-beta value
-gamma value
-lambda_u value
-lambda_e value
-lambda_c value
-pressure_gain value
-recovery_gain value
-control_limit value
-sparsity_threshold value
-max_iterations value
-```
-
-## Compilação
-
-```sh
-make
-```
-
-## Execução
-
-```sh
-./causal_game data/graph.txt data/config.txt > trajectory.csv 2> metrics.txt
-```
-
-## Ambiente
-
-Sistema operacional: Linux
-
-Compilador: GCC
-
-Padrão da linguagem: ISO C90
-
-Dependências externas: nenhuma
-
-Complexidade temporal por passo:
-
-\[
-O(n^2+n\log n)
-\]
-
-na formulação conceitual e
-
-\[
-O(n^2)
-\]
-
-na implementação atual por varredura determinística.
-
-Complexidade espacial:
-
-\[
-O(n^2+|E|).
-\]
+.
+├── Makefile
+├── README.md
+├── data
+│   ├── config.txt
+│   └── graph.txt
+├── include
+│   └── model.h
+└── src
+    ├── dynamics.c
+    ├── game.c
+    ├── graph.c
+    ├── io.c
+    └── main.c
